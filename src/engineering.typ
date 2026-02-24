@@ -174,7 +174,10 @@
         continue
       }
 
-      emph(l(position.title))
+      emph({
+        l(position.title)
+        if ("extra" in position) [ (#l(position.extra))]
+      })
       h(1fr)
       show-range(position.from, position.at("to", default: none))
       linebreak()
