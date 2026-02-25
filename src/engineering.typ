@@ -13,6 +13,7 @@
   work: array(()),
   education: array(()),
   tags: (),
+  sort-by-tags: false,
   projects: none,
   skills: none,
 ) = {
@@ -165,15 +166,41 @@
           position
         })
         .filter(position => position.tag in tags or position.task.len() > 0 or tags.len() == 0)
-        .sorted(key: it => (it.at("to", default: datetime.today()), it.from))
+        .map(position => {
+          let local-tags = position.task.map(t => t.tag)
+          local-tags.push(position.tag)
+          let idx = local-tags
+            .map(t => {
+              let pos = tags.position(it => it == t)
+              pos = if pos == none { 99 } else { pos }
+              (pos, t)
+            })
+            .sorted(key: x => x.first())
+            .first()
+            .first()
+
+          position.insert("sort-index", idx)
+          position
+        })
+        .sorted(key: it => {
+          if sort-by-tags {
+            -it.sort-index
+          } else {
+            (it.at("to", default: datetime.today()), it.from)
+          }
+        })
         .rev()
 
       work
     })
     .filter(work => work.position.len() > 0)
     .sorted(key: work => {
-      let position = work.position.first()
-      (position.at("to", default: datetime.today()), position.from)
+      if sort-by-tags {
+        -work.position.sorted(key: it => it.sort-index).first().sort-index
+      } else {
+        let position = work.position.first()
+        (position.at("to", default: datetime.today()), position.from)
+      }
     })
     .rev()
 
