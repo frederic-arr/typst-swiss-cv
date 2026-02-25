@@ -161,10 +161,10 @@
       work.position = work
         .position
         .map(position => {
-          position.task = position.task.filter(task => task.tag in tags)
+          position.task = position.task.filter(task => task.tag in tags or tags.len() == 0)
           position
         })
-        .filter(position => position.tag in tags or position.task.len() > 0)
+        .filter(position => position.tag in tags or position.task.len() > 0 or tags.len() == 0)
         .sorted(key: it => (it.at("to", default: datetime.today()), it.from))
         .rev()
 
