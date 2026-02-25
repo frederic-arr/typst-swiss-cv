@@ -60,7 +60,7 @@
     panic("No translation found")
   }
 
-  let show-range(from, to) = emph({
+  let show-range(from, to) = {
     custom-date-format(
       from,
       pattern: "MMMM yyyy",
@@ -78,14 +78,26 @@
     } else {
       linguify("present")
     }
-  })
+  }
+
+  let show-position(position, i) = {
+    if i > 0 {
+      emph(show-range(position.from, position.at("to", default: none)))
+    }
+
+    if position.task.len() > 0 {
+      list(..position.task.map(it => it.description).flatten().map(it => l(it)))
+    }
+  }
 
   set text(
     font: "Liberation Sans",
     lang: lang.split("-").first(),
     size: 10pt,
     ligatures: false,
+    hyphenate: false,
   )
+  set list(indent: 1em)
   show smallcaps: set text(font: "Alegreya Sans SC")
   set page(
     paper: "a4",
@@ -107,7 +119,7 @@
     rows: auto,
     align: (left, right),
     [
-      = #first_name #upper(last_name)
+      = #first_name #upper(last_name) \
       #link("mailto:" + email)[#email] \
       #link("tel:" + tel.replace(" ", "%20"))[#tel] \
       #l(address)
@@ -133,106 +145,152 @@
     ],
   )
 
-  show heading.where(level: 1): it => {
-    v(1em, weak: true)
-    (
-      text(size: 14pt, smallcaps(it.body))
-        + h(0.25cm)
-        + box(
-          width: 1fr,
-          height: 6pt,
-          baseline: 40%,
-          line(length: 100%),
-        )
+  show heading.where(level: 1): it => block({
+    it.body
+    h(0.25cm)
+    box(
+      width: 1fr,
+      height: 6pt,
+      baseline: 40%,
+      line(length: 100%),
     )
-    v(0.25em, weak: true)
-  }
-  show heading.where(level: 2): set text(size: 11pt)
+  })
 
-  heading(linguify("work-experience"))
-  let has_tags = tags.len() > 0
-  for work in work {
-    let has_position_tag = work.position.any(it => it.tag in tags)
-    let has_included_tags = work.position.any(it => {
-      it.task.any(it => it.tag in tags)
-    })
-
-    if has_tags and not has_position_tag and not has_included_tags {
-      continue
-    }
-
-    box(heading(l(work.name), level: 2))
-    h(1fr)
-    strong(l(work.location))
-    linebreak()
-
-
-    for position in work.position {
-      let has_tagged_tasks = position.task.any(it => it.tag in tags)
-
-      if has_tags and not has_tagged_tasks and position.tag not in tags {
-        continue
-      }
-
-      emph({
-        l(position.title)
-        if ("extra" in position) [ (#l(position.extra))]
-      })
-      h(1fr)
-      show-range(position.from, position.at("to", default: none))
-      linebreak()
-
-      let tasks = position
-        .task
-        .filter(it => if has_tags { it.tag in tags } else {
-          true
+  let work = work
+    .map(work => {
+      work.position = work
+        .position
+        .map(position => {
+          position.task = position.task.filter(task => task.tag in tags)
+          position
         })
-        .map(it => it.description)
-        .flatten()
-        .map(it => l(it))
+        .filter(position => position.tag in tags or position.task.len() > 0)
+        .sorted(key: it => (it.at("to", default: datetime.today()), it.from))
+        .rev()
 
-      if tasks.len() > 0 {
-        list(..tasks)
-      }
+      work
+    })
+    .filter(work => work.position.len() > 0)
+    .sorted(key: work => {
+      let position = work.position.first()
+      (position.at("to", default: datetime.today()), position.from)
+    })
+    .rev()
+
+  [= #linguify("work-experience") ]
+  for (i, work) in work.enumerate() {
+    let grouped = work
+      .position
+      .fold((:), (acc, x) => {
+        let title = l(x.title)
+        if title not in acc {
+          acc.insert(
+            title,
+            (
+              title: title,
+              position: array(()),
+            ),
+          )
+        }
+        acc.at(title).position.push(x)
+
+        acc
+      })
+      .values()
+
+    if grouped.len() == 1 {
+      let group = grouped.first()
+
+      block(
+        spacing: if i > 0 { 2em } else { 0em },
+        below: 0.75em,
+        {
+          box([== #group.title])
+          h(1fr)
+          strong(l(work.name))
+        },
+      )
+
+      box({
+        let position = group.position.first()
+        emph(show-range(position.from, position.at("to", default: none)))
+        h(1fr)
+        l(work.location)
+      })
+
+      box(inset: (right: 2em), {
+        for (i, position) in group.position.enumerate() {
+          show-position(position, i)
+        }
+      })
+    } else {
+      block(
+        spacing: if i > 0 { 2em } else { 0em },
+        below: 0.75em,
+        {
+          box([== #l(work.name)])
+          [ (#l(work.location))]
+        },
+      )
+
+      box({
+        for (i, group) in grouped.enumerate() {
+          for (i, position) in group.position.enumerate() {
+            box([=== #group.title])
+            h(0.25cm)
+            emph(show-range(position.from, position.at("to", default: none)))
+            show-position(position, i)
+          }
+        }
+      })
     }
   }
 
   if projects != none {
-    heading(linguify("projects"))
-    projects
+    [= #linguify("projects")]
+    context {
+      let headings = state("headings", 0)
+      show heading: it => {
+        headings.update(it => it + 1)
+
+        if headings.get() == 0 {
+          block(spacing: 0em, below: 0.75em, it)
+        } else {
+          block(spacing: 1.5em, below: 0.75em, it)
+        }
+      }
+
+      for c in projects.children {
+        c
+      }
+    }
   }
 
-  heading(linguify("education"))
-  for edu in education {
-    box(emph(heading(l(edu.title), level: 2)))
-    h(1fr)
-    strong({
-      emph([#edu.to.year()])
-      if datetime.today() < edu.to {
-        [ ]
-        linguify("estimated")
-      }
-    })
-    linebreak()
+  [= #linguify("education") ]
+  for (i, edu) in education.enumerate() {
+    block(
+      spacing: if i > 0 { 2em } else { 0em },
+      below: 0.75em,
+      {
+        box([== #l(edu.title)])
+        h(1fr)
+        strong({
+          emph([#edu.to.year()])
+          if datetime.today() < edu.to {
+            [ ]
+            linguify("estimated")
+          }
+        })
+      },
+    )
 
-    box(strong(l(edu.subtitle)))
+    l(edu.name)
     h(1fr)
-
-    if lang.ends-with("CH") {
-      let grade = str(calc.round((edu.grade / 100.0) * 6.0, digits: 1))
-      if grade.len() == 1 {
-        grade += ".0"
-      }
-      emph(linguify("grade-ch", args: (grade: str(grade))))
-    } else {
-      emph(linguify("grade", args: (grade: edu.grade)))
+    l(edu.location)
+    if "subtitle" in edu {
+      linebreak()
+      emph(l(edu.subtitle))
     }
-    linebreak()
-
-    box(emph(l(edu.name)))
-    h(1fr)
-    emph(l(edu.location))
-    linebreak()
 
     if "details" in edu {
       if type(edu.details) == content {
@@ -241,12 +299,10 @@
         list(cmarker.render(l(edu.details)))
       }
     }
-
-    v(0.25em)
   }
 
   if skills != none {
-    heading(linguify("skills"))
+    [= #linguify("skills")]
     skills
   }
 }
