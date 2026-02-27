@@ -1,0 +1,7 @@
+{
+    "tinymist.lint.enabled": true,
+    "tinymist.preview.refresh": "onSave",
+    "tinymist.formatterIndentSize": 4,
+    "tinymist.formatterProseWrap": true,
+    "tinymist.formatterPrintWidth": 80,
+}
