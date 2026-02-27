@@ -349,7 +349,11 @@
                 box([== #l(edu.title)])
                 h(1fr)
                 strong({
-                    emph([#edu.to.year()])
+                    custom-date-format(
+                        edu.to,
+                        pattern: "MMM yyyy",
+                        lang: lang,
+                    )
                     if datetime.today() < edu.to {
                         [ ]
                         linguify("estimated")

@@ -10,6 +10,6 @@ education = Formation
 projects = Projets
 skills = Compétences
 present = aujourd'hui
-estimated = (prévisionnelle)
+estimated = (estimé)
 grade = Moyenne: {$grade}%
 grade-ch = Moyenne: {$grade} / 6.0
