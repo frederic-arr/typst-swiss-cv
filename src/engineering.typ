@@ -340,55 +340,97 @@
         }
     }
 
-    [= #linguify("education") ]
-    for (i, edu) in education.enumerate() {
-        block(
-            spacing: if i > 0 { 2em } else { 0em },
-            below: 0.75em,
-            {
-                box([== #l(edu.title)])
-                h(1fr)
-                strong({
-                    custom-date-format(
-                        edu.to,
-                        pattern: "MMM yyyy",
-                        lang: lang,
-                    )
-                    if datetime.today() < edu.to {
-                        [ ]
-                        linguify("estimated")
-                    }
-                })
-            },
-        )
-
-        l(edu.name)
-        h(1fr)
-        l(edu.location)
-        if "subtitle" in edu {
-            linebreak()
-            emph(l(edu.subtitle))
-        }
-
-        [ -- ]
-        if lang.ends-with("-CH") {
-            emph(linguify("grade-ch", args: (grade: edu.grade_CH)))
-        } else {
-            emph(linguify("grade", args: (grade: edu.grade)))
-        }
-
-        if "details" in edu {
-            if type(edu.details) == content {
-                list(edu.details)
+    let education = education
+        .filter(edu => (
+            tags.len() == 0
+                or tags.any(t => (
+                    t.starts-with(edu.tag)
+                ))
+        ))
+        .sorted(key: it => {
+            if sort-by-tags {
+                -it.sort-index
             } else {
-                list(cmarker.render(l(edu.details)))
+                (it.at("to", default: datetime.today()), it.from)
+            }
+        })
+        .rev()
+
+    if education.len() > 0 {
+        [= #linguify("education") ]
+        for (i, edu) in education.enumerate() {
+            let show-grade = (
+                tags.len() == 0
+                    or tags.any(t => (
+                        t.starts-with(edu.tag) and "+grade" in t
+                    ))
+            )
+
+            let show-details = (
+                tags.len() == 0
+                    or tags.any(t => (
+                        t.starts-with(edu.tag) and "+details" in t
+                    ))
+            )
+
+            block(
+                spacing: if i > 0 { 2em } else { 0em },
+                below: 0.75em,
+                {
+                    box([== #l(edu.title)])
+                    h(1fr)
+                    strong({
+                        custom-date-format(
+                            edu.to,
+                            pattern: "MMM yyyy",
+                            lang: lang,
+                        )
+                        if datetime.today() < edu.to {
+                            [ ]
+                            linguify("estimated")
+                        }
+                    })
+                },
+            )
+
+            l(edu.name)
+            h(1fr)
+            l(edu.location)
+            if "subtitle" in edu {
+                linebreak()
+                emph(l(edu.subtitle))
+            }
+
+            if show-grade {
+                [ -- ]
+                if lang.ends-with("-CH") {
+                    emph(linguify("grade-ch", args: (grade: edu.grade_CH)))
+                } else {
+                    emph(linguify("grade", args: (grade: edu.grade)))
+                }
+            }
+
+
+            if show-details {
+                if type(edu.details) == content {
+                    list(edu.details)
+                } else {
+                    list(cmarker.render(l(edu.details)))
+                }
             }
         }
     }
 
     if skills != none {
-        [= #linguify("skills")]
-        skills
+        [
+            = #linguify("skills")
+
+            * #linguify("programming-languages")*: #skills.programming-languages
+            \
+            * #linguify("tools")*: #skills.tools \
+            * #linguify("skills")*: #skills.skills \
+            * #linguify("spoken-languages")*: #skills.spoken-languages
+        ]
     }
 }
 

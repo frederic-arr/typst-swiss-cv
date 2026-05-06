@@ -13,3 +13,6 @@ present = aujourd'hui
 estimated = (estimé)
 grade = Moyenne: {$grade}%
 grade-ch = Moyenne: {$grade} / 6.0
+programming-languages = Languages de programmation
+tools = Outils
+spoken-languages = Langues

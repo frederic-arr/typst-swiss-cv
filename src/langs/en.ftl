@@ -13,3 +13,6 @@ present = Today
 estimated = (estimated)
 grade = Grade: {$grade}%
 grade-ch = Grade: {$grade} / 6.0
+programming-languages = Programming Languages
+tools = Tools
+spoken-languages = Spoken Languages
