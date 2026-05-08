@@ -19,12 +19,33 @@
     color: none,
     link-color: none,
     print-mode: "none",
+    anonymize: false,
 ) = {
     import "@preview/linguify:0.5.0": linguify, load-ftl-data, set-database
     import "@preview/datify:1.0.1": custom-date-format
     import "@preview/cmarker:0.1.8"
+    import "@preview/digestify:0.2.0": *
+
+    let hash(data) = bytes-to-hex(md5(data)).slice(0, 7)
+    // let d(data) = if anonymize { hash(data) } else { data }
+    let d(data, fallback) = if anonymize { fallback } else { data }
 
     set-database(eval(load-ftl-data("/src/langs", ("fr", "en"))))
+
+    if anonymize {
+        first_name = "Bob"
+        last_name = "Moran"
+        gender = "Male"
+        date_of_birth = datetime(year: 2000, month: 01, day: 01)
+        tel = "+41 11 300 01 01"
+        email = "contact@example.com"
+        address = [
+            Rue du Pont 4\
+            1200 Genève
+        ]
+        nationality = "Swiss"
+        links = ("https://github.com", "https://www.linkedin.com/")
+    }
 
     let prefix = lang.split("-").first()
     let langkey = lang.replace("-", "_")
@@ -274,7 +295,7 @@
                 {
                     box([== #group.title])
                     h(1fr)
-                    strong(l(work.name))
+                    strong(d(l(work.name), [Work #(i + 1)]))
                 },
             )
 
@@ -285,7 +306,7 @@
                     default: none,
                 )))
                 h(1fr)
-                emph(l(work.location))
+                emph(d(l(work.location), [Somewhere]))
             })
 
             box(inset: (right: 2em), {
@@ -298,8 +319,8 @@
                 spacing: if i > 0 { 1.25em } else { 0em },
                 below: 0.75em,
                 {
-                    box([== #l(work.name)])
-                    emph[ (#l(work.location))]
+                    box([== #d(l(work.name), [Work #(i + 1)])])
+                    emph[ (#d(l(work.location), [Somewhere]))]
                 },
             )
 
@@ -393,9 +414,9 @@
                 },
             )
 
-            l(edu.name)
+            d(l(edu.name), [School #(i + 1)])
             h(1fr)
-            l(edu.location)
+            d(l(edu.location), [Somewhere])
             if "subtitle" in edu {
                 linebreak()
                 emph(l(edu.subtitle))
