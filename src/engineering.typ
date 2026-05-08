@@ -346,6 +346,11 @@
             tags.len() == 0 or tags.contains(proj.tag)
         ))
         .map(proj => {
+            if tags.len() == 0 {
+                proj.insert("sort-index", 99)
+                return proj
+            }
+
             let idx = tags
                 .map(t => {
                     let pos = tags.position(t => t == proj.tag)
@@ -359,13 +364,7 @@
             proj.insert("sort-index", idx)
             proj
         })
-        .sorted(key: it => {
-            if sort-by-tags {
-                -it.sort-index
-            } else {
-                (it.at("to", default: datetime.today()), it.from)
-            }
-        })
+        .sorted(key: it => -it.sort-index)
         .rev()
 
     if projects.len() > 0 {
@@ -397,6 +396,11 @@
                 ))
         ))
         .map(edu => {
+            if tags.len() == 0 {
+                edu.insert("sort-index", 99)
+                return edu
+            }
+
             let idx = tags
                 .map(t => {
                     let pos = tags.position(t => t == edu.tag)
