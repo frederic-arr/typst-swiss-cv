@@ -14,7 +14,7 @@
     education: array(()),
     tags: (),
     sort-by-tags: false,
-    projects: none,
+    project: array(()),
     skills: none,
     color: none,
     link-color: none,
@@ -341,7 +341,34 @@
         }
     }
 
-    if projects != none {
+    let projects = project
+        .filter(proj => (
+            tags.len() == 0 or tags.contains(proj.tag)
+        ))
+        .map(proj => {
+            let idx = tags
+                .map(t => {
+                    let pos = tags.position(t => t == proj.tag)
+                    pos = if pos == none { 99 } else { pos }
+                    (pos, t)
+                })
+                .sorted(key: x => x.first())
+                .first()
+                .first()
+
+            proj.insert("sort-index", idx)
+            proj
+        })
+        .sorted(key: it => {
+            if sort-by-tags {
+                -it.sort-index
+            } else {
+                (it.at("to", default: datetime.today()), it.from)
+            }
+        })
+        .rev()
+
+    if projects.len() > 0 {
         [= #linguify("projects")]
         context {
             let headings = state("headings", 0)
@@ -355,8 +382,9 @@
                 }
             }
 
-            for c in projects.children {
-                c
+            for proj in projects {
+                [== #l(proj.name)]
+                l(proj.description)
             }
         }
     }
@@ -368,6 +396,20 @@
                     t.starts-with(edu.tag)
                 ))
         ))
+        .map(edu => {
+            let idx = tags
+                .map(t => {
+                    let pos = tags.position(t => t == edu.tag)
+                    pos = if pos == none { 99 } else { pos }
+                    (pos, t)
+                })
+                .sorted(key: x => x.first())
+                .first()
+                .first()
+
+            edu.insert("sort-index", idx)
+            edu
+        })
         .sorted(key: it => {
             if sort-by-tags {
                 -it.sort-index
