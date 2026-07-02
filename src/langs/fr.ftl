@@ -16,3 +16,4 @@ grade-ch = Moyenne: {$grade} / 6.0
 programming-languages = Languages de programmation
 tools = Outils
 spoken-languages = Langues
+fields-of-expertise = Domaines d'expertise

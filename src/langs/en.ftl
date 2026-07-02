@@ -16,3 +16,4 @@ grade-ch = Grade: {$grade} / 6.0
 programming-languages = Programming Languages
 tools = Tools
 spoken-languages = Spoken Languages
+fields-of-expertise = Fields of Expertise

@@ -489,15 +489,42 @@
     }
 
     if skills != none {
-        [
-            = #linguify("skills")
+        heading(linguify("skills"))
 
-            * #linguify("programming-languages")*: #skills.programming-languages
-            \
-            * #linguify("tools")*: #skills.tools \
-            * #linguify("skills")*: #skills.skills \
-            * #linguify("spoken-languages")*: #skills.spoken-languages
-        ]
+        if skills.at("programming-languages", default: none) != none {
+            strong(linguify("programming-languages"))
+            [: ]
+            skills.programming-languages
+            linebreak()
+        }
+
+        if skills.at("tools", default: none) != none {
+            strong(linguify("tools"))
+            [: ]
+            skills.tools
+            linebreak()
+        }
+
+        if skills.at("skills", default: none) != none {
+            strong(linguify("skills"))
+            [: ]
+            skills.skills
+            linebreak()
+        }
+
+        if skills.at("spoken-languages", default: none) != none {
+            strong(linguify("spoken-languages"))
+            [: ]
+            skills.spoken-languages
+            linebreak()
+        }
+
+        if skills.at("fields-of-expertise", default: none) != none {
+            strong(linguify("fields-of-expertise"))
+            [: ]
+            skills.fields-of-expertise
+            linebreak()
+        }
     }
 }
 
