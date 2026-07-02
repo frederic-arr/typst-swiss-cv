@@ -403,7 +403,7 @@
 
             let idx = tags
                 .map(t => {
-                    let pos = tags.position(t => t == edu.tag)
+                    let pos = tags.position(t => t.starts-with(edu.tag))
                     pos = if pos == none { 99 } else { pos }
                     (pos, t)
                 })
